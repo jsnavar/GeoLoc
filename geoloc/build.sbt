@@ -9,6 +9,8 @@ lazy val root = (project in file("."))
       "org.apache.spark" %% "spark-core" % "3.4.1",
       "org.apache.spark" %% "spark-sql" % "3.4.1",
       "org.postgresql" % "postgresql" % "42.1.1",
+
+      "org.scalacheck" %% "scalacheck" % "1.14.1" % Test,
       "org.scalameta" %% "munit" % "0.7.29" % Test),
     javaOptions ++= Seq("--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"),
     scalacOptions ++= Seq("-language:implicitConversions", "-deprecation"),
