@@ -5,6 +5,8 @@ import org.scalacheck.{Gen, Arbitrary}
 import geoloc.geometry.Point
 
 object PointSpecification extends Properties("Point") {
+  import common._
+
   val pointGen = for {
     lon <- Gen.choose(-180f, 180f)
     lat <- Gen.choose(-90f, 90f)
