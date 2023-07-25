@@ -12,8 +12,6 @@ object PointSpecification extends Properties("Point") {
     lat <- Gen.choose(-90f, 90f)
   } yield Point(lon, lat)
 
-  def implication(p: Boolean, q: Boolean) = !p || q
-
   implicit val arbitraryPoint: Arbitrary[Point] = Arbitrary(pointGen)
 
   property("reflexive") = forAll { (p: Point) =>
