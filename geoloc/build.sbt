@@ -14,5 +14,6 @@ lazy val root = (project in file("."))
       "org.scalameta" %% "munit" % "0.7.29" % Test),
     javaOptions ++= Seq("--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"),
     scalacOptions ++= Seq("-language:implicitConversions", "-deprecation"),
-    fork := true
+    fork := true,
+    run / connectInput := true
   )
