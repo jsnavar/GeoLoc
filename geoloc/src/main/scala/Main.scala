@@ -21,7 +21,6 @@ object Main extends App {
   locator.locate(Point(0f, 0f))
   println("running")
 
-  val line = StdIn.readLine().split(" ")
   val mainIterator = Iterator.continually(StdIn.readLine())
     .takeWhile(_ != "quit")
     .map(_.split(","))
