@@ -59,17 +59,34 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
       .cache()
   }
 
+  /* By definition, leaves of the quadtree have datasets of LabeledBox objects.
+   * The splitter will assign all bounding boxes intersecting a quadrant to that
+   * subtree, which means that the same bbox could end in more than one leaf.
+   * While this increases the memory usage of the index, it simplifies searching,
+   * as for any point p, a leaf containing p necessarily contains all bounding
+   * boxes that could cover it */
+
   implicit val datasetSplitter: QSplitter[Dataset[LabeledBox]] = {
+    /* filter bounding boxes by comparing a representative point with
+     * the center of the bounding box. For example, filterBy(_.center, _ swOf _)(data, bbox)
+     * will return a Dataset[LabeledBox] containing all LabeledBox objects in 'data', such
+     * that their centers are to the sw of the center of 'bbox' */
     def filterBy(repr: BBox => Point, fromCenter: (Point, Point) => Boolean)(dataset: Dataset[LabeledBox], bbox: BBox) = {
       dataset.filter(lb => fromCenter(repr(lb.bbox), bbox.center))
     }
 
+    /* By contruction, the splitter is called with a dataset and a bbox, where all
+     * bounding boxes in the dataset intersect the bounding box.
+     * Then, to find bboxes intersecting a quadrant, it is sufficient to verify
+     * that the corresponding corner is in the same direction of the center: a box
+     * intersecting 'bbox' whose sw corner is to the sw of the center of 'bbox' intersects
+     * that quadrant */
     new QSplitter(filterBy(_.sw, _ swOf _),
                   filterBy(_.nw, _ nwOf _),
                   filterBy(_.ne, _ neOf _),
                   filterBy(_.se, _ seOf _))
   }
-
+  /* branching is regulated by two parameters: max depth, and maxLeafSize */
   def branchIf(dataset: Dataset[LabeledBox], depth: Int) = {
     val maxDepth = 16
     val maxLeafSize = 1000
@@ -80,7 +97,9 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
   val index: QuadTree[Dataset[LabeledBox]] = QuadTree.of(boxedDS(dbDF), mapBBox, branchIf, _.cache())
 
   def locate(point: Point): Set[String] = {
-    val (ds, _) = index.get(point)
+    val (ds, bbox) = index.get(point)
+    assert(bbox.contains(point))
+
     ds.filter(_.bbox.contains(point))
         .map(_.label)
         .collect()
