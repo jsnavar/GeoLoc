@@ -72,7 +72,7 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
      * will return a Dataset[LabeledBox] containing all LabeledBox objects in 'data', such
      * that their centers are to the sw of the center of 'bbox' */
     def filterBy(repr: BBox => Point, fromCenter: (Point, Point) => Boolean)(dataset: Dataset[LabeledBox], bbox: BBox) = {
-      dataset.filter(lb => fromCenter(repr(lb.bbox), bbox.center))
+      dataset.filter(lb => fromCenter(repr(lb.bbox), bbox.center)).cache()
     }
 
     /* By contruction, the splitter is called with a dataset and a bbox, where all
@@ -94,7 +94,13 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
   }
   val mapBBox = BBox(Point(-180f, -90f), Point(180f, 90f))
 
-  val index: QuadTree[Dataset[LabeledBox]] = QuadTree.of(boxedDS(dbDF), mapBBox, branchIf, _.cache())
+  def persist(ds: Dataset[LabeledBox]) = {
+    val cached = ds.cache();
+    cached.count()
+    cached
+  }
+  val ds = boxedDS(dbDF)
+  val index: QuadTree[Dataset[LabeledBox]] = QuadTree.of(ds, mapBBox, branchIf, persist)
 
   def locate(point: Point): Set[String] = {
     val (ds, bbox) = index.get(point)
