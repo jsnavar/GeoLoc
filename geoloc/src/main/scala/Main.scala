@@ -23,13 +23,18 @@ class AkkaServer(locator: SparkLoc, host: String, port: Int) {
 
   val route: Route = get {
     pathPrefix("locate" / DoubleNumber / DoubleNumber) { (lon, lat) =>
-      val countriesFuture: Future[Set[String]] = Future {
-        locator.locate(Point(lon.toFloat, lat.toFloat))
-      }
+      val point = Point(lon, lat)
+      if (locator.mapBBox.contains(point)) {
+        val countriesFuture: Future[Set[String]] = Future {
+          locator.locate(Point(lon.toFloat, lat.toFloat))
+        }
 
-      onSuccess(countriesFuture) { countries =>
-        if(countries.isEmpty) complete(StatusCodes.NotFound)
-        else complete(countries)
+        onSuccess(countriesFuture) { countries =>
+          if(countries.isEmpty) complete(StatusCodes.NotFound)
+          else complete(countries)
+        }
+      } else {
+        complete(StatusCodes.BadRequest)
       }
     }
   }
@@ -59,7 +64,9 @@ object Main extends App {
     .takeWhile(_ != "quit")
     .map(_.split(","))
     .filter(_.size == 2)
-    .map(sq => Point(sq(0).toFloat, sq(1).toFloat))
+    .map(sq => (sq(0).toFloatOption, sq(1).toFloat))
+    .collect{ case (Some(lon), Some(lat)) => Point(lon, lat) }
+    .filter(locator.mapBBox.contains)
 
   for (point <- mainIterator) {
     println(locator.locate(point))
