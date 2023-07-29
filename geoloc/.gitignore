@@ -1,4 +1,4 @@
 /.bsp/
 target/
 
-src/main/scala/secret.scala
+#src/main/scala/secret.scala
