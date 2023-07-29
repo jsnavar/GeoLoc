@@ -4,17 +4,19 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.SparkSession
 
-import geoloc.geometry._
+import geoloc.geometry.{Point, BBox}
 import geoloc.index._
 
 /* postgres connection data */
 case class PGData(url: String, dbtable: String, user: String, password: String)
 
-case class LabeledBox(label: String, bbox: BBox)
+case class LabeledBox(label: String, bbox: BBox, polygon: Seq[Point])
 
 class SparkLoc(spark: SparkSession, pgData: PGData) {
   import spark.implicits._
   import org.apache.spark.sql.functions._
+
+  import geoloc.geometry.functions.insideOf
 
   /* Reads the data from Postgres.
    * Schema: CREATE TABLE(label text, polygon jsonb); */
@@ -54,7 +56,8 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
                                           least(element_at(box, 2), element_at(point, 2)),
                                           greatest(element_at(box, 3), element_at(point, 1)),
                                           greatest(element_at(box, 4), element_at(point, 2)))))
-      .select($"label", toBBox($"bbox").as("bbox"))
+      .withColumn("point_polygon", transform($"polygon", arr => toPoint(element_at(arr, 1), element_at(arr, 2))))
+      .select($"label", toBBox($"bbox").as("bbox"), $"point_polygon".as("polygon"))
       .as[LabeledBox]
       .cache()
   }
@@ -106,7 +109,7 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
     val (ds, bbox) = index.get(point)
     assert(bbox.contains(point))
 
-    ds.filter(_.bbox.contains(point))
+    ds.filter(lb => lb.bbox.contains(point) && insideOf(point, lb.polygon))
         .map(_.label)
         .collect()
         .toSet
