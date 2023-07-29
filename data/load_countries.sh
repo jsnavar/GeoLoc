@@ -4,7 +4,7 @@ DATABASE=geodb
 TABLE=country_pol
 
 # directory with GeoJSON files
-JSON_DIR=./data
+JSON_DIR=./gadm
 
 for json_doc in ${JSON_DIR}/*.json
 do
@@ -12,6 +12,7 @@ do
 done
 
 psql -d ${DATABASE} <<EOF
+START TRANSACTION;
 CREATE TABLE IF NOT EXISTS ${TABLE} (label TEXT, polygon JSONB);
 TRUNCATE TABLE ${TABLE};
 
@@ -20,9 +21,10 @@ CREATE TEMP TABLE tmp (doc JSONB);
 ${LOAD_CMDS}
 
 INSERT INTO ${TABLE}
-SELECT ft -> 'properties' ->> 'GID_0', jsonb_array_elements(ft -> 'geometry' -> 'coordinates') -> 0
+SELECT CONCAT(ft -> 'properties' ->> 'COUNTRY', ';', ft -> 'properties' ->> 'NAME_1'), jsonb_array_elements(ft -> 'geometry' -> 'coordinates') -> 0
 FROM tmp CROSS JOIN LATERAL jsonb_array_elements(doc -> 'features') AS ft;
 
+COMMIT;
 EOF
 
 unset DATABASE
