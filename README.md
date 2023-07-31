@@ -26,6 +26,69 @@ The system was tested with data from [GADM 4.1](https://gadm.org/data.html), whi
 
 GeoJSON files from gadm can be downloaded into `data/gadm/`, and then loaded into postgres using the script `data/load_countries.sh`. It is also necessary to provide username and password for postgres in `src/main/scala/secret.scala`.
 
+Some metadata (queries in readme/data.sql):
+
+Property | Value
+-------- | --------
+Number of countries / territories | 251
+Number of level 1 subdivisions | 3643
+Total number of polygons | 120939
+Average polygon size   | 37.5533
+Stddev of polygon size | 519.276
+Maximum polygon size   | 106669
+Minimum polygon size   | 4
+
+Largest polygons:
+               label               |  len   
+-----------------------------------|--------
+ Antarctica;                       | 106669
+ Canada;Nunavut                    |  67813
+ UnitedStates;Alaska               |  49236
+ Canada;Nunavut                    |  47650
+ Canada;Nunavut                    |  38685
+ Canada;Québec                     |  29713
+ Russia;Sakha                      |  24159
+ Russia;Krasnoyarsk                |  22138
+ Australia;WesternAustralia        |  19021
+ Canada;NewfoundlandandLabrador    |  17213
+ Canada;NewfoundlandandLabrador    |  17104
+ Russia;Yamal-Nenets               |  16139
+ Chile;AyséndelGeneralIbañezdelCam |  14217
+
+Top 10 countries by number of polygons
+    country    |  np   
+---------------|-------
+ Canada        | 24510
+ Chile         | 10120
+ UnitedStates  |  8516
+ Indonesia     |  7539
+ Australia     |  6646
+ Russia        |  5802
+ Sweden        |  3359
+ Norway        |  3137
+ Finland       |  2884
+ UnitedKingdom |  2495
+
+
+Top 3 subdivisions of top 5 countries by number of polygons:
+   country    |            l1div            | npoly 
+--------------|-----------------------------|-------
+ Australia    | WesternAustralia            |  2734
+ Australia    | Tasmania                    |  1866
+ Australia    | Queensland                  |  1185
+ Canada       | Nunavut                     | 11906
+ Canada       | Québec                      |  4107
+ Canada       | NewfoundlandandLabrador     |  2868
+ Chile        | MagallanesyAntárticaChilena |  5773
+ Chile        | AyséndelGeneralIbañezdelCam |  3567
+ Chile        | Valparaíso                  |   356
+ Indonesia    | KepulauanRiau               |  1524
+ Indonesia    | MalukuUtara                 |   646
+ Indonesia    | SulawesiTengah              |   488
+ UnitedStates | Alaska                      |  4152
+ UnitedStates | Florida                     |  1145
+ UnitedStates | Louisiana                   |   845
+
 ### Interface
 GeoLoc includes two interfaces: an interactive stdin/stdout interface, and an HTTP one. An example of the interactive interface is:
 ```
@@ -48,3 +111,4 @@ On the other hand, the http interface listens on port 8080 for GET requests on `
 ["Japan;Kagoshima"]
 ```
 This interface returns a 400 code if the coordinates are invalid, and a 404 if it does not find the point.
+
