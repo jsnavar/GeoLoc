@@ -91,8 +91,8 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
   }
   /* branching is regulated by two parameters: max depth, and maxLeafSize */
   def branchIf(dataset: Dataset[LabeledBox], depth: Int) = {
-    val maxDepth = 16
-    val maxLeafSize = 1000
+    val maxDepth = 64
+    val maxLeafSize = 512
     dataset.count() > maxLeafSize && depth < maxDepth
   }
   val mapBBox = BBox(Point(-180f, -90f), Point(180f, 90f))
