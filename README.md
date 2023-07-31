@@ -8,7 +8,7 @@ Data is read into a dataframe from a relational table with schema:
   CREATE TABLE(label TEXT, polygon JSONB);
 ```
 
-That dataframe is then augmented with bounding boxes, generating a `Dataset[LabeledBox]`:
+Then, that dataframe is augmented with bounding boxes, generating a `Dataset[LabeledBox]`:
 ```scala
   case class LabeledBox(label: String, bbox: BBox, polygon: Seq[Point])
 ```
@@ -18,13 +18,13 @@ and finally, the dataset is splitted into a quadtree, such that each leaf contai
 ### Searching
 Given a point, searching takes three steps:
 - First, it uses the quadtree to find a leaf containing the point. By construction, that leaf has all the polygons that could cover the point.
-- Then, it filters the leaf's dataset to get the polygons that actually have the point in the interior, using a ray crossings algorithm. For performance reasons, it checks the bounding boxes before, and only computes the ray crossings if the point is in the bbox.
+- Then, it filters the leaf's dataset to get the polygons that actually have the point in the interior, using a ray crossings algorithm. For performance reasons, it first checks the bounding boxes, and only computes the ray crossings if the point is in the bbox.
 - Finally, it collects the labels from the resulting objects.
 
 ### Data
 The system was tested with data from [GADM 4.1](https://gadm.org/data.html), which can not be redistributed without permission. 
 
-GeoJSON files from gadm can be downloaded into `data/gadm/`, and then loaded into postgres using the script `data/load_countries.sh`. It is also necessary to provide username and password for postgres in `src/main/scala/secret.scala`.
+GeoJSON files can be downloaded into `data/gadm/`, and then loaded into postgres using the script `data/load_countries.sh`. It is also necessary to provide username and password for the database in `src/main/scala/secret.scala`.
 
 Some metadata (queries in readme/data.sql):
 
