@@ -9,10 +9,11 @@ import geoloc.index._
 
 /* postgres connection data */
 case class PGData(url: String, dbtable: String, user: String, password: String)
+case class TreeConfig(maxDepth: Int, maxLeafSize: Int)
 
 case class LabeledBox(label: String, bbox: BBox, polygon: Seq[Point])
 
-class SparkLoc(spark: SparkSession, pgData: PGData) {
+class SparkLoc(spark: SparkSession, pgData: PGData, treeConfig: TreeConfig) {
   import spark.implicits._
   import org.apache.spark.sql.functions._
 
@@ -91,9 +92,7 @@ class SparkLoc(spark: SparkSession, pgData: PGData) {
   }
   /* branching is regulated by two parameters: max depth, and maxLeafSize */
   def branchIf(dataset: Dataset[LabeledBox], depth: Int) = {
-    val maxDepth = 64
-    val maxLeafSize = 512
-    dataset.count() > maxLeafSize && depth < maxDepth
+    dataset.count() > treeConfig.maxLeafSize && depth < treeConfig.maxDepth
   }
   val mapBBox = BBox(Point(-180f, -90f), Point(180f, 90f))
 

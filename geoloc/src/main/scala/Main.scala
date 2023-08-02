@@ -14,7 +14,7 @@ import spray.json.RootJsonFormat
 
 import org.apache.spark.sql.SparkSession
 
-import geoloc.SparkLoc
+import geoloc.{SparkLoc, TreeConfig}
 import geoloc.geometry.Point
 
 class AkkaServer(locator: SparkLoc, host: String, port: Int) {
@@ -55,7 +55,7 @@ object Main extends App {
 
   spark.sparkContext.setLogLevel("ERROR")
 
-  val locator = new SparkLoc(spark, Secret.pgData)
+  val locator = new SparkLoc(spark, Secret.pgData, TreeConfig(128, 300))
 
   val httpServer = new AkkaServer(locator, "localhost", 8080)
 
